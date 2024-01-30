@@ -305,14 +305,23 @@ void SearchTenHighestValues(T_Node *root, T_Node **nodes) {
     SearchTenHighestValues(root->right, nodes);
 }
 
-void TPrintHighestValues(T_Node *root) {
+void TOutputHighestValues(T_Node *root, char *outputFilePath) {
     if (root == NULL) return;
+
+    FILE *output = fopen(outputFilePath, "w");
+    if (output == NULL)
+    {
+        printf("Error opening the output file");
+        return;
+    }
 
     T_Node **nodes = malloc(10 * sizeof(T_Node*));
     SearchTenHighestValues(root, nodes);
     for (int i = 0; i < 10; ++i) {
-        printf("%d | %s - %d - %d\n", i + 1, nodes[i]->key->name, nodes[i]->key->count, nodes[i]->key->departureCount);
+        fprintf(output, "%d;%s;%d;%d\n", i + 1, nodes[i]->key->name, nodes[i]->key->count, nodes[i]->key->departureCount);
     }
+
+    fclose(output);
 }
 
 void SearchFiftyHighestValues(S_Node *root, S_Node **nodes) {
@@ -324,15 +333,24 @@ void SearchFiftyHighestValues(S_Node *root, S_Node **nodes) {
     SearchFiftyHighestValues(root->right, nodes);
 }
 
-void SPrintHighestValues(S_Node *root) {
+void SOutputHighestValues(S_Node *root, char* outputFilePath) {
     if (root == NULL) return;
+
+    FILE *output = fopen(outputFilePath, "w");
+    if (output == NULL)
+    {
+        printf("Error opening the output file");
+        return;
+    }
 
     S_Node **nodes = malloc(50 * sizeof(S_Node*));
     SearchFiftyHighestValues(root, nodes);
     for (int i = 0; i < 50; ++i) {
         struct LListInfo info = GetLListInfo(nodes[i]->distances);
-        printf("%d | %d - %f - %f - %f\n", i + 1, nodes[i]->routeID, info.min, info.average, info.max);
+        fprintf(output, "%d;%d;%f;%f;%f\n", i + 1, nodes[i]->routeID, info.min, info.average, info.max);
     }
+
+    fclose(output);
 }
 
 T_Node **GetTenHighestCountCities(T_Node *root) {
@@ -349,7 +367,7 @@ void PrintPreOrder(T_Node *root) {
     }
 }
 
-T_Node *T(FILE *file) {
+T_Node *T(FILE *file, char* outputFilePath) {
     T_Node *root = NULL;
 
     char buffer[1024];
@@ -379,10 +397,10 @@ T_Node *T(FILE *file) {
         line_number++;
     }
 
-    TPrintHighestValues(root);
+    TOutputHighestValues(root, outputFilePath);
 }
 
-S_Node *S(FILE *file) {
+S_Node *S(FILE *file, char* outputFilePath) {
     S_Node *root = NULL;
 
     char buffer[1024];
@@ -414,11 +432,13 @@ S_Node *S(FILE *file) {
         line_number++;
     }
 
-    SPrintHighestValues(root);
+    SOutputHighestValues(root, outputFilePath);
 }
 
 int main(int argc, char *argv[]) {
-    FILE *file = fopen(argv[1], "r");//replace by arg
+    FILE *file = fopen(argv[1], "r");
+
+    if (argc < 3) return -1;
 
     if (!file) {
         printf("Impossible d'ouvrir le fichier\n");
@@ -426,8 +446,8 @@ int main(int argc, char *argv[]) {
     }
 
     char arg = *argv[2];
-    if (arg == 'T') T(file);
-    else if (arg == 'S') S(file);
+    if (arg == 'T') T(file, "output.txt");
+    else if (arg == 'S') S(file, "output.txt");
     else abort();
 
     fclose(file);
